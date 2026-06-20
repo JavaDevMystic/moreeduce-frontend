@@ -69,8 +69,9 @@ export interface AdminPlatformPayment {
     createdAt: string;
 }
 
+// ==================== ENROLLMENTS ====================
+
 export interface AdminEnrollment {
-    id?: number;
     enrollmentId: number;
     studentId: number;
     studentName: string;
@@ -78,8 +79,7 @@ export interface AdminEnrollment {
     courseName: string;
     paymentReceiptUrl?: string;
     status: "PENDING" | "APPROVED" | "ACTIVE" | "REJECTED";
-    createdAt?: string;
-    amount?: number;
+    enrolledAt: string;
 }
 
 export interface AdminComment {
@@ -316,25 +316,72 @@ export const compareCoursesStats = (courseId1: number, courseId2: number) =>
         `/statistics/compare-courses?courseId1=${courseId1}&courseId2=${courseId2}`,
     );
 
+export interface AdminEnrollment {
+    enrollmentId: number;
+    studentId: number;
+    studentName: string;
+    courseId: number;
+    courseName: string;
+    paymentReceiptUrl?: string;
+    status: "PENDING" | "APPROVED" | "ACTIVE" | "REJECTED";
+    enrolledAt: string;
+}
+
 // ==================== ENROLLMENTS ====================
-export const getAdminEnrollments = async (): Promise<AdminEnrollment[]> => {
-    try {
-        const result = await adminFetch<AdminEnrollment[]>("/enrollments");
-        if (Array.isArray(result)) return result;
-    } catch {
-        // fallback
-    }
 
-    return adminFetch<AdminEnrollment[]>(
-        "/teacher/dashboard/pending-enrollments",
+/**
+
+ * Pending enrollmentlar ro'yxati
+ *
+ * GET /api/v1/admin/enrollments/pending
+ */
+export const getAdminEnrollments = () =>
+    adminFetch<AdminEnrollment[]>(
+        "/enrollments/pending"
     );
-};
 
+/**
+
+ * Enrollment statusini o'zgartirish
+ *
+ * PUT /api/v1/admin/enrollments/{id}/status?status=APPROVED
+ * PUT /api/v1/admin/enrollments/{id}/status?status=REJECTED
+ */
 export const updateEnrollmentStatus = (
     enrollmentId: number,
     status: "APPROVED" | "REJECTED",
 ) =>
-    adminFetch<string>(
-        `/teacher/enrollments/${enrollmentId}/status?status=${status}`,
-        {method: "PUT"},
+    adminFetch<void>(
+        `/enrollments/${enrollmentId}/status?status=${status}`,
+        {
+            method: "PUT",
+        },
+    );
+
+/**
+
+ * Enrollmentni tasdiqlash
+ */
+export const approveEnrollment = (
+    enrollmentId: number,
+) =>
+    adminFetch<void>(
+        `/enrollments/${enrollmentId}/status?status=APPROVED`,
+        {
+            method: "PUT",
+        },
+    );
+
+/**
+
+ * Enrollmentni rad etish
+ */
+export const rejectEnrollment = (
+    enrollmentId: number,
+) =>
+    adminFetch<void>(
+        `/enrollments/${enrollmentId}/status?status=REJECTED`,
+        {
+            method: "PUT",
+        },
     );
